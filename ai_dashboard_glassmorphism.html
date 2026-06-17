@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Share+Tech+Mono&family=Inter:wght@300;400;500&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080c12;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .dashboard {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Cyberpunk grid bg */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,200,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,200,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow-1 {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,200,0.06) 0%, transparent 70%);
+    top: -200px; left: -100px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .bg-glow-2 {
+    position: fixed;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,100,255,0.05) 0%, transparent 70%);
+    bottom: -100px; right: -100px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(0,255,200,0.12);
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #00ffc8;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 0 8px 24px;
+    border-bottom: 1px solid rgba(0,255,200,0.12);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #00ffc8;
+    box-shadow: 0 0 12px #00ffc8;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 12px #00ffc8; }
+    50% { opacity: 0.5; box-shadow: 0 0 4px #00ffc8; }
+  }
+
+  .nav-section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: rgba(0,255,200,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+  }
+
+  .nav-item:hover {
+    background: rgba(0,255,200,0.05);
+    color: rgba(255,255,255,0.8);
+    border-color: rgba(0,255,200,0.15);
+  }
+
+  .nav-item.active {
+    background: rgba(0,255,200,0.08);
+    color: #00ffc8;
+    border-color: rgba(0,255,200,0.25);
+  }
+
+  .nav-item .icon { font-size: 15px; width: 18px; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: rgba(200,100,255,0.2);
+    border: 1px solid rgba(200,100,255,0.4);
+    color: #c864ff;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,255,200,0.12);
+    background: rgba(0,255,200,0.04);
+  }
+
+  .user-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00ffc8, #c864ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: #080c12;
+    font-family: 'Orbitron', monospace;
+  }
+
+  .user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.75);
+  }
+
+  .user-role {
+    font-size: 10px;
+    color: rgba(0,255,200,0.5);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    padding: 28px 28px;
+    position: relative;
+    z-index: 5;
+    overflow-y: auto;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+    color: rgba(0,255,200,0.6);
+    font-family: 'Share Tech Mono', monospace;
+    margin-top: 3px;
+    letter-spacing: 1px;
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Neon CTA Button */
+  .btn-neon {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 9px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+
+  .btn-neon-primary {
+    background: #00ffc8;
+    color: #080c12;
+    box-shadow: 0 0 20px rgba(0,255,200,0.35), 0 0 60px rgba(0,255,200,0.1);
+  }
+
+  .btn-neon-primary:hover {
+    box-shadow: 0 0 30px rgba(0,255,200,0.6), 0 0 80px rgba(0,255,200,0.2);
+    transform: translateY(-1px);
+  }
+
+  .btn-neon-ghost {
+    background: transparent;
+    color: #c864ff;
+    border: 1px solid rgba(200,100,255,0.4);
+    box-shadow: 0 0 12px rgba(200,100,255,0.15);
+  }
+
+  .btn-neon-ghost:hover {
+    background: rgba(200,100,255,0.08);
+    box-shadow: 0 0 20px rgba(200,100,255,0.3);
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .stat-card:hover { border-color: rgba(255,255,255,0.15); }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-value span {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .stat-delta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .delta-up { color: #00ffc8; }
+  .delta-down { color: #ff4d6d; }
+
+  /* ── GLASS CARDS ── */
+  .cards-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .glass-card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .card-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+  }
+
+  .tag-green { background: rgba(0,255,200,0.1); color: #00ffc8; border: 1px solid rgba(0,255,200,0.2); }
+  .tag-purple { background: rgba(200,100,255,0.1); color: #c864ff; border: 1px solid rgba(200,100,255,0.2); }
+  .tag-gold { background: rgba(255,200,0,0.1); color: #ffc800; border: 1px solid rgba(255,200,0,0.2); }
+
+  .card-body { padding: 16px 20px; }
+
+  /* Chart bars */
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100px;
+    padding-top: 10px;
+  }
+
+  .bar-group { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+
+  .bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    transition: opacity 0.2s;
+    position: relative;
+  }
+
+  .bar:hover { opacity: 0.8; }
+  .bar-teal { background: linear-gradient(to top, rgba(0,255,200,0.4), rgba(0,255,200,0.8)); box-shadow: 0 0 8px rgba(0,255,200,0.3); }
+  .bar-purple { background: linear-gradient(to top, rgba(200,100,255,0.3), rgba(200,100,255,0.7)); box-shadow: 0 0 8px rgba(200,100,255,0.2); }
+
+  .bar-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.5px;
+  }
+
+  /* Activity feed */
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  .activity-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+  }
+
+  .activity-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Bottom row */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* Progress ring */
+  .ring-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 6px;
+  }
+
+  .ring-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .ring-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Scan line overlay */
+  .scan-overlay {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,200,0.008) 2px,
+      rgba(0,255,200,0.008) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .model-card-body {
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .model-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .model-name {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    flex: 1;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .model-bar-track {
+    flex: 2;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .model-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .model-pct {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    width: 36px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow-1"></div>
+<div class="bg-glow-2"></div>
+<div class="scan-overlay"></div>
+
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      Nexus
+    </div>
+
+    <div class="nav-section-label">CORE</div>
+
+    <div class="nav-item active">
+      <i class="ti ti-layout-dashboard icon" aria-hidden="true"></i>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-cpu icon" aria-hidden="true"></i>
+      AI Models
+      <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-chart-dots icon" aria-hidden="true"></i>
+      Analytics
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-robot icon" aria-hidden="true"></i>
+      Simulations
+      <span class="nav-badge">2</span>
+    </div>
+
+    <div class="nav-section-label" style="margin-top:8px;">SYSTEM</div>
+
+    <div class="nav-item">
+      <i class="ti ti-database icon" aria-hidden="true"></i>
+      Data Nodes
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-api icon" aria-hidden="true"></i>
+      API Layer
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-shield-lock icon" aria-hidden="true"></i>
+      Security
+    </div>
+    <div class="nav-item">
+      <i class="ti ti-settings icon" aria-hidden="true"></i>
+      Config
+    </div>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">DS</div>
+      <div>
+        <div class="user-name">Nexus</div>
+        <div class="user-role">SIM_ADMIN</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <div class="page-title">SIM CONTROL</div>
+        <div class="page-subtitle">// SYSTEM ACTIVE — SESSION_ID: 7F3A2</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-neon btn-neon-ghost">
+          <i class="ti ti-download" style="font-size:12px; margin-right:6px;" aria-hidden="true"></i>
+          EXPORT
+        </button>
+        <button class="btn-neon btn-neon-primary">
+          <i class="ti ti-player-play" style="font-size:12px; margin-right:6px;" aria-hidden="true"></i>
+          RUN SIM
+        </button>
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card" style="--accent:#00ffc8">
+        <div class="stat-label">Active Nodes</div>
+        <div class="stat-value">2,847<span> nodes</span></div>
+        <div class="stat-delta delta-up">
+          <i class="ti ti-trending-up" style="font-size:11px;"></i> +12.4% this cycle
+        </div>
+      </div>
+      <div class="stat-card" style="--accent:#c864ff">
+        <div class="stat-label">Sim Accuracy</div>
+        <div class="stat-value">98.7<span>%</span></div>
+        <div class="stat-delta delta-up">
+          <i class="ti ti-trending-up" style="font-size:11px;"></i> +0.3% vs baseline
+        </div>
+      </div>
+      <div class="stat-card" style="--accent:#ffc800">
+        <div class="stat-label">Compute Used</div>
+        <div class="stat-value">1.2<span> TFLOP</span></div>
+        <div class="stat-delta delta-down">
+          <i class="ti ti-trending-down" style="font-size:11px;"></i> -5.1% optimized
+        </div>
+      </div>
+      <div class="stat-card" style="--accent:#ff4d6d">
+        <div class="stat-label">Anomalies</div>
+        <div class="stat-value">3<span> flagged</span></div>
+        <div class="stat-delta delta-up" style="color:#ff4d6d;">
+          <i class="ti ti-alert-triangle" style="font-size:11px;"></i> Requires review
+        </div>
+      </div>
+    </div>
+
+    <!-- MID ROW -->
+    <div class="cards-row">
+
+      <!-- Chart Card -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="card-title">Simulation Throughput</div>
+          <span class="card-tag tag-green">LIVE</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-bars">
+            <div class="bar-group">
+              <div class="bar bar-teal" style="height:45px;"></div>
+              <div class="bar-label">MON</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-teal" style="height:70px;"></div>
+              <div class="bar-label">TUE</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-teal" style="height:55px;"></div>
+              <div class="bar-label">WED</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-teal" style="height:85px;"></div>
+              <div class="bar-label">THU</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-purple" style="height:95px;"></div>
+              <div class="bar-label">FRI</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-purple" style="height:65px;"></div>
+              <div class="bar-label">SAT</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar bar-teal" style="height:80px;"></div>
+              <div class="bar-label">SUN</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:16px; margin-top:14px;">
+            <div style="display:flex; align-items:center; gap:6px; font-family:'Share Tech Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4);">
+              <div style="width:10px;height:3px;background:#00ffc8;border-radius:2px;box-shadow:0 0 6px #00ffc8;"></div>
+              STANDARD
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; font-family:'Share Tech Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4);">
+              <div style="width:10px;height:3px;background:#c864ff;border-radius:2px;box-shadow:0 0 6px #c864ff;"></div>
+              BOOSTED
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="card-title">Event Log</div>
+          <span class="card-tag tag-purple">STREAM</span>
+        </div>
+        <div class="card-body">
+          <div class="activity-item">
+            <div class="activity-dot" style="color:#00ffc8; background:#00ffc8;"></div>
+            <div>
+              <div class="activity-text">Sim Engine v2.4 checkpoint saved</div>
+              <div class="activity-time">00:02:14 AGO</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="color:#c864ff; background:#c864ff;"></div>
+            <div>
+              <div class="activity-text">Node cluster #47 rebalanced</div>
+              <div class="activity-time">00:07:33 AGO</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="color:#ffc800; background:#ffc800;"></div>
+            <div>
+              <div class="activity-text">Anomaly pattern detected: sector 9</div>
+              <div class="activity-time">00:15:01 AGO</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="color:#00ffc8; background:#00ffc8;"></div>
+            <div>
+              <div class="activity-text">Model GEMMA-7B deployed to grid</div>
+              <div class="activity-time">00:31:49 AGO</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- Model load -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="card-title">Model Load</div>
+          <span class="card-tag tag-gold">7 ACTIVE</span>
+        </div>
+        <div class="model-card-body">
+          <div class="model-row">
+            <div class="model-name">GPT-4o</div>
+            <div class="model-bar-track">
+              <div class="model-bar-fill" style="width:82%;background:linear-gradient(90deg,rgba(0,255,200,0.4),#00ffc8);box-shadow:0 0 6px rgba(0,255,200,0.5);"></div>
+            </div>
+            <div class="model-pct" style="color:#00ffc8;">82%</div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">Claude 3.5</div>
+            <div class="model-bar-track">
+              <div class="model-bar-fill" style="width:74%;background:linear-gradient(90deg,rgba(200,100,255,0.4),#c864ff);box-shadow:0 0 6px rgba(200,100,255,0.4);"></div>
+            </div>
+            <div class="model-pct" style="color:#c864ff;">74%</div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">GEMMA-7B</div>
+            <div class="model-bar-track">
+              <div class="model-bar-fill" style="width:56%;background:linear-gradient(90deg,rgba(255,200,0,0.4),#ffc800);box-shadow:0 0 6px rgba(255,200,0,0.3);"></div>
+            </div>
+            <div class="model-pct" style="color:#ffc800;">56%</div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">Mistral</div>
+            <div class="model-bar-track">
+              <div class="model-bar-fill" style="width:31%;background:linear-gradient(90deg,rgba(255,77,109,0.4),#ff4d6d);box-shadow:0 0 6px rgba(255,77,109,0.3);"></div>
+            </div>
+            <div class="model-pct" style="color:#ff4d6d;">31%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ring gauges -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="card-title">Resource Use</div>
+        </div>
+        <div class="card-body" style="display:flex; justify-content:space-around; align-items:center; padding: 12px 10px;">
+          <div class="ring-container">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#00ffc8" stroke-width="5"
+                stroke-dasharray="163.36" stroke-dashoffset="36" stroke-linecap="round"
+                transform="rotate(-90 32 32)" style="filter:drop-shadow(0 0 4px #00ffc8)"/>
+            </svg>
+            <div class="ring-val" style="color:#00ffc8;">78%</div>
+            <div class="ring-label">CPU</div>
+          </div>
+          <div class="ring-container">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#c864ff" stroke-width="5"
+                stroke-dasharray="163.36" stroke-dashoffset="65" stroke-linecap="round"
+                transform="rotate(-90 32 32)" style="filter:drop-shadow(0 0 4px #c864ff)"/>
+            </svg>
+            <div class="ring-val" style="color:#c864ff;">60%</div>
+            <div class="ring-label">GPU</div>
+          </div>
+          <div class="ring-container">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#ffc800" stroke-width="5"
+                stroke-dasharray="163.36" stroke-dashoffset="98" stroke-linecap="round"
+                transform="rotate(-90 32 32)" style="filter:drop-shadow(0 0 4px #ffc800)"/>
+            </svg>
+            <div class="ring-val" style="color:#ffc800;">40%</div>
+            <div class="ring-label">RAM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="glass-card">
+        <div class="card-header">
+          <div class="card-title">Quick Actions</div>
+        </div>
+        <div style="padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
+          <button class="btn-neon btn-neon-primary" style="width:100%; text-align:left; padding:10px 14px; display:flex; align-items:center; gap:8px; border-radius:6px; font-size:10px;">
+            <i class="ti ti-player-play" style="font-size:13px;" aria-hidden="true"></i>
+            LAUNCH NEW SIM
+          </button>
+          <button class="btn-neon btn-neon-ghost" style="width:100%; text-align:left; padding:10px 14px; display:flex; align-items:center; gap:8px; border-radius:6px; font-size:10px; box-sizing:border-box;">
+            <i class="ti ti-refresh" style="font-size:13px;" aria-hidden="true"></i>
+            SYNC ALL NODES
+          </button>
+          <button style="background:rgba(255,77,109,0.08); color:#ff4d6d; border:1px solid rgba(255,77,109,0.25); font-family:'Orbitron',monospace; font-size:10px; font-weight:600; letter-spacing:2px; padding:10px 14px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:8px; width:100%; transition:all 0.2s;">
+            <i class="ti ti-alert-triangle" style="font-size:13px;" aria-hidden="true"></i>
+            CLEAR ANOMALIES
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
